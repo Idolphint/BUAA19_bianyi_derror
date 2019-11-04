@@ -1,0 +1,3 @@
+int a = 'as'
+int b = 'bs'
+char c= 'ss'
