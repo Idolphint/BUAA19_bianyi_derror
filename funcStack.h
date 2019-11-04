@@ -1,27 +1,42 @@
 #pragma once
 #include <vector>
 #include "derror.h"
-#include "runStack.h"
 #include <string>
 #include <iostream>
 using namespace std;
+static enum classtype {//¶¨ÒåÀà±ð
+	CONST,
+	VAR
+};
+
+static enum datatype {//Êý¾ÝÀàÐÍ
+	dINT,
+	dCHAR,
+	dARRAY,
+	dVOID
+};
 class funcRecord{
 public:
 	string name;
 	datatype returnT;
 	vector<datatype> paraList;
+	vector<string> nameL;
+	int rtN;
 	funcRecord() {
+		this->rtN = 0;
 	}
 
 	funcRecord(string name, datatype rtT) {
 		this->name = name;
 		this->returnT = rtT;
+		this->rtN = 0;
 	}
 
 	funcRecord(string name, datatype rtT, vector<datatype> paraL) {
 		this->name = name;
 		this->returnT = rtT;
 		this->paraList = paraL;
+		this->rtN = 0;
 	}
 };
 
@@ -42,6 +57,7 @@ funcRecord find_func(string name, vector<datatype> paral) { // Èç¹ûÕÒ²»µ½¸Ãº¯Êý£
 			return func;
 		}
 	}
+	throw myexception('c');//
 }
 
 void put_check(funcRecord& fun) {

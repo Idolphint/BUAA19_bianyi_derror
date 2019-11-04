@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include <vector>
 #include "wordAna.h"
+#include "funcStack.h"
+#include "runStack.h"
 using namespace std;
 
 string treestr[] = {
@@ -153,7 +155,7 @@ int findVarDef(vector<treetype>& oriList, int begin);
 int findComplexSentence(vector<treetype>& oriList, int begin);
 int findVarDeclare(vector<treetype>& oriList, int begin);
 int findDeclareHead(vector<treetype>& oriList, int begin, funcRecord& newF);
-int findParamList(vector<treetype>& oriList, int begin, funcRecord& newF);
+int findParamList(vector<treetype>& oriList, int begin, funcRecord& newF, runStack& env);
 int findFuncReturnDef(vector<treetype>& oriList, int begin);
 int findSentenceList(vector<treetype>& oriList, int begin);
 int findFactor(vector<treetype>& oriList, int begin, datatype& tp);
@@ -171,8 +173,7 @@ int findReturnS(vector<treetype>& oriList, int begin);
 int findSentence(vector<treetype>& oriList, int begin);
 int findAssignS(vector<treetype>& oriList, int begin);
 int findValueParaList(vector<treetype>& oriList, int begin, vector<datatype>& paraL);
-int findUseVoidFunc(vector<treetype>& oriList, int begin);
-int findUseReturnFunc(vector<treetype>& oriList, int begin, datatype& tp);
+int findUseFunc(vector<treetype>& oriList, int begin, datatype& tp);
 int findFuncVoidDef(vector<treetype>& oriList, int begin);
 int findFuncDef(vector<treetype>& oriList, int begin);
 int findMainFunc(vector<treetype>& oriList, int begin);

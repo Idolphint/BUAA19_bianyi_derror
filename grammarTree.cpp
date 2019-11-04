@@ -147,7 +147,7 @@ int findConstDef(vector<treetype>& oriList, int begin) {
 		datatype tp;
 		int pos = begin;
 		if (oriList.at(begin) == rawINTTK) {
-			tp = INT;
+			tp = datatype::dINT;
 			pos = begin + 1;
 			if (oriList.at(pos) != rawIDENFR || oriList.at(pos + 1) != rawASSIGN)
 			{
@@ -189,7 +189,7 @@ int findConstDef(vector<treetype>& oriList, int begin) {
 			return pos + 1;
 		}
 		else if (oriList.at(begin) == rawCHARTK) {
-			tp = CHAR;
+			tp =  datatype::dCHAR;
 			pos = begin + 1;
 			if (oriList.at(pos) != rawIDENFR || oriList.at(pos + 1) != rawASSIGN
 				|| oriList.at(pos + 2) != rawCHARCON)
@@ -273,7 +273,7 @@ int findVarDef(vector<treetype>& oriList, int begin) {
 			findit = false;
 			return begin;
 		}
-		tp = (oriList.at(begin) == rawCHARTK) ? CHAR : INT;
+		tp = (oriList.at(begin) == rawCHARTK) ? datatype::dCHAR : datatype::dINT;
 		int pos = begin + 1;
 		if (oriList.at(pos) != rawIDENFR) {
 			findit = false;
@@ -294,9 +294,13 @@ int findVarDef(vector<treetype>& oriList, int begin) {
 			}
 			arrayTem temp(len, 1, tp, globalAddr++);
 			int addrtem = (int)& temp;
-			record newone(name, VAR, ARRAY, addrtem);
+			record newone(name, VAR, dARRAY, addrtem);
 			nowenv.writeStack(newone);
 			pos++;
+		}
+		else {
+			record newone(name, VAR, tp, globalAddr++);
+			nowenv.writeStack(newone);
 		}
 		while (oriList.at(pos) == rawCOMMA) {
 			pos++;
@@ -319,9 +323,13 @@ int findVarDef(vector<treetype>& oriList, int begin) {
 				}
 				arrayTem temp(len, 1, tp, globalAddr++);
 				int addrtem = (int)& temp;
-				record newone(name, VAR, ARRAY, addrtem);
+				record newone(name, VAR, dARRAY, addrtem);
 				nowenv.writeStack(newone);
 				pos++;
+			}
+			else {
+				record newone(name, VAR, tp, globalAddr++);
+				nowenv.writeStack(newone);
 			}
 		}
 		if (oriList.at(pos) != rawSEMICN)
@@ -393,7 +401,7 @@ int findDeclareHead(vector<treetype>& oriList, int begin, funcRecord& newF) {
 			findit = false;
 			return begin;
 		}
-		newF.returnT = (first == rawINTTK) ? INT: CHAR;
+		newF.returnT = (first == rawINTTK) ?  datatype::dINT:  datatype::dCHAR;
 		if (oriList.at(begin + 1) != rawIDENFR) {
 			findit = false;
 			return begin;
@@ -408,7 +416,7 @@ int findDeclareHead(vector<treetype>& oriList, int begin, funcRecord& newF) {
 	}
 }
 
-int findParamList(vector<treetype>& oriList, int begin, funcRecord& newF) {
+int findParamList(vector<treetype>& oriList, int begin, funcRecord& newF, runStack& env) {
 	try {
 		int pos = begin;
 		vector<datatype> paraL;
@@ -419,13 +427,21 @@ int findParamList(vector<treetype>& oriList, int begin, funcRecord& newF) {
 			findit = true;
 			return pos ;
 		}
-		datatype buf = (oriList.at(pos) == rawINTTK) ? INT : CHAR;
+		datatype buf = (oriList.at(pos) == rawINTTK) ?  datatype::dINT :  datatype::dCHAR;
 		paraL.push_back(buf);
 		pos++;
 		if (oriList.at(pos) != rawIDENFR) {
 			//cout << "invalid gramma in paralist, don't know how to deal" << endl;
 			findit = false;
 			return begin;
+		}
+		record newrec(strlist.at(pos), VAR, buf, globalAddr++);
+		try {
+			env.writeStack(newrec);
+		}
+		catch (myexception ex) {
+			ex.lineno = lnolist.at(pos);
+			ex.pntMsg();
 		}
 		pos++;
 		while (oriList.at(pos) == rawCOMMA) {
@@ -435,12 +451,20 @@ int findParamList(vector<treetype>& oriList, int begin, funcRecord& newF) {
 				findit = false;
 				return begin;
 			}
-			buf = (oriList.at(pos) == rawINTTK) ? INT : CHAR;
+			buf = (oriList.at(pos) == rawINTTK) ?  datatype::dINT :  datatype::dCHAR;
 			paraL.push_back(buf);
 			pos++;
 			if (oriList.at(pos) != rawIDENFR) {
 				findit = false;
 				return begin;
+			}
+			record newrec(strlist.at(pos), VAR, buf, globalAddr++);
+			try {
+				env.writeStack(newrec);
+			}
+			catch (myexception ex) {
+				ex.lineno = lnolist.at(pos);
+				ex.pntMsg();
 			}
 			pos++;
 		}
@@ -464,20 +488,30 @@ int findFuncReturnDef(vector<treetype>& oriList, int begin) {
 			return begin;
 		}
 		pos++;
-		pos = findParamList(oriList, pos, newF); //就算是空的，也必须表示出来吗？？？？？大概是的
+		runStack nowenv = myrunStack.top();
+		runStack newenv(&nowenv);
+		newenv.father = newF;
+		pos = findParamList(oriList, pos, newF, newenv); //就算是空的，也必须表示出来吗？？？？？大概是的
+		if (!findit) return begin;
 		try {
 			put_check(newF);
 		}
 		catch (myexception ex) {
-			myexception fex = myexception(ex.etype, lnolist.at(pos - 1), "");
-			fex.pntMsg();
-		}
-		if (!findit || oriList.at(pos) != rawRPARENT || oriList.at(pos + 1) != rawLBRACE) {
+			ex.lineno = lnolist.at(pos - 1);
+			ex.pntMsg();
+		} 
+		if (oriList.at(pos) != rawRPARENT || oriList.at(pos + 1) != rawLBRACE) {
 			findit = false;
 			return begin;
 		}
 		pos += 2;
+
+		myrunStack.push(newenv);
 		pos = findComplexSentence(oriList, pos);
+		myrunStack.pop();//不管是不是找到了其语句都要弹出
+		if (newF.rtN == 0) {
+			myexception('h', lnolist.at(pos - 1), "该函数缺少return 语句");
+		}
 		if (!findit || oriList.at(pos) != rawRBRACE) {
 			findit = false;
 			return begin;
@@ -502,7 +536,7 @@ int findSentenceList(vector<treetype>& oriList, int begin) {
 		}
 		cout<<"语句列 "<<endl;
 		findit = true;//可以为0次
-		return pos ;
+		return pos;
 	}
 	catch (out_of_range& exc) {
 		return begin;
@@ -513,36 +547,69 @@ int findFactor(vector<treetype>& oriList, int begin, datatype &tp) {
 	try {
 		int pos = begin;
 		if (oriList.at(begin) == rawCHARCON) {
-			tp = CHAR;
+			tp =  datatype::dCHAR;
 			cout<<"因子 "<<endl;
 			findit = true;
 			return begin + 1;
 		}
 		else if (oriList.at(begin) == rawIDENFR) {
-			int posbuf = findUseReturnFunc(oriList, begin, tp);
+			int posbuf = findUseFunc(oriList, begin, tp);
 			if (!findit) {
-				if (oriList.at(begin + 1) == rawLBRACK) {
-					pos = findExpress(oriList, pos + 2, tp);
-					if (!findit || oriList.at(pos) != rawRBRACK)
-					{
-						findit = false;
-						return begin;
-					}
-
-					cout<<"因子 "<<endl;
-					findit = true;
-					return pos + 1;
-				}
-				else {
-					runStack nowenv = myrunStack.top();
+				runStack nowenv = myrunStack.top();
+				try {
 					record rebuf = nowenv.findRecord(strlist.at(begin));
-					tp = (rebuf.typeD == INT) ? INT : tp;
-					cout<<"因子"<<endl;
+					tp = rebuf.typeD;
+					if (tp == dARRAY && oriList.at(begin+1) != rawLBRACK ) {
+						throw myexception('c', lnolist.at(begin + 1), "该变量是一个数组，返回dARRAY可能导致出错");
+					}
+					if (oriList.at(begin + 1) == rawLBRACK) {
+						datatype tp2;
+						pos = findExpress(oriList, pos + 2, tp2);
+						if (!findit) return begin;
+						if (tp2 != datatype::dINT) {
+							myexception ex('i', lnolist.at(pos - 1), "数组下标不是整形表达式");
+							ex.pntMsg();
+						}
+						if (oriList.at(pos) != rawRBRACK)
+						{
+							findit = false;
+							return begin;
+						}
+
+						cout << "因子 " << endl;
+						findit = true;
+						return pos + 1;
+					}
+					else {
+						tp = rebuf.typeD;
+						cout << "因子" << endl;
+						findit = true;
+						return pos + 1;
+					}
+				}
+				catch (myexception ex) {
+					ex.lineno = lnolist.at(begin);
+					ex.msg = "没有这样的变量";
+					ex.pntMsg();
 					findit = true;
-					return pos + 1;
+					tp = datatype::dINT;
+					pos = begin + 1;
+					if (oriList.at(pos) != rawLBRACK) {
+						return pos;
+					}
+					else {
+						pos++;
+						while (lnolist.at(begin) == lnolist.at(pos) && oriList.at(pos) != rawRBRACK) pos++;
+						if (oriList.at(pos) == rawRBRACK)
+							return pos + 1;
+						else return pos;
+					}
 				}
 			}
 			else {
+				if (tp == datatype::dVOID) {
+					//error! 调用了void函数作为因子
+				}
 				cout<<"因子 "<<endl;
 				findit = true;
 				return posbuf ;
@@ -580,8 +647,7 @@ int findFactor(vector<treetype>& oriList, int begin, datatype &tp) {
 int findItem(vector<treetype>& oriList, int begin, datatype& tp) {
 	try {
 		datatype tpbuf;
-		int pos = findFactor(oriList, begin, tpbuf);
-		tp = (tpbuf == INT) ? INT : CHAR;
+		int pos = findFactor(oriList, begin, tp);
 		if (pos == begin) {
 			findit = false;
 			return begin;
@@ -590,7 +656,7 @@ int findItem(vector<treetype>& oriList, int begin, datatype& tp) {
 			pos++;
 			pos = findFactor(oriList, pos, tpbuf);
 			if (!findit) return begin;
-			tp = (tpbuf == INT) ? INT : tp;
+			tp = (tpbuf ==  datatype::dINT) ?  datatype::dINT : tp;
 		}
 		cout << "item" << endl;
 		findit = true;
@@ -603,14 +669,13 @@ int findItem(vector<treetype>& oriList, int begin, datatype& tp) {
 
 int findExpress(vector<treetype>& oriList, int begin, datatype& tp) {
 	try {
-		tp = INT;
+		tp =  datatype::dINT;
 		datatype tpbuf;
 		int pos = begin;
 		if (oriList.at(begin) == rawPLUS || oriList.at(begin) == rawMINU) {
 			pos++;
 		}
-		int posbuf = findItem(oriList, pos, tpbuf);
-		tp = (tpbuf == INT) ? INT : CHAR;
+		int posbuf = findItem(oriList, pos, tp);
 		if (!findit) {
 			findit = false;
 			return begin;
@@ -621,7 +686,7 @@ int findExpress(vector<treetype>& oriList, int begin, datatype& tp) {
 			pos = findItem(oriList, pos, tpbuf);
 			if (findit = false)
 				return begin; //默认不存在用+-结尾的表达式
-			tp = (tpbuf == INT) ? INT : tp;
+			tp = (tpbuf ==  datatype::dINT) ?  datatype::dINT : tp;
 		}
 		cout<<"项 "<<endl;
 		findit = true;
@@ -634,20 +699,20 @@ int findExpress(vector<treetype>& oriList, int begin, datatype& tp) {
 
 int findCondition(vector<treetype>& oriList, int begin) {
 	try {
-		int pos = begin;
+		 int pos = begin;
 		datatype tp;
 		try {
 			pos = findExpress(oriList, pos, tp);
 			if (!findit) return begin;
-			if (tp != INT) {
-				throw myexception('f', lnolist.at(pos - 1), "");
+			if (tp !=  datatype::dINT) {
+				throw myexception('f', lnolist.at(pos - 1), "条件中的表达式必须是整形的");
 			}
 			if (oriList.at(pos) >= rawLSS && oriList.at(pos) <= rawNEQ) {
 				pos++;
 				pos = findExpress(oriList, pos, tp);
 				if (!findit) return begin;
-				if (tp != INT) {
-					throw myexception('f', lnolist.at(pos - 1), "");
+				if (tp !=  datatype::dINT) {
+					throw myexception('f', lnolist.at(pos - 1), "条件中的表达式必须是整形的");
 				}
 			}
 		}
@@ -749,7 +814,12 @@ int findDoS(vector<treetype>& oriList, int begin) {
 		pos = findSentence(oriList, pos);
 		if (!findit)
 			return begin;
-		if (oriList.at(pos) != rawWHILETK || oriList.at(pos + 1) != rawLPARENT)
+		if (oriList.at(pos) != rawWHILETK) {
+			myexception ex('n', lnolist.at(pos), "do-while缺少while");
+			ex.pntMsg();
+			return pos;
+		}
+		if (oriList.at(pos + 1) != rawLPARENT)
 		{
 			findit = false;
 			return begin;
@@ -853,6 +923,14 @@ int findScanfS(vector<treetype>& oriList, int begin) {
 			findit = false;
 			return begin;
 		}
+		runStack nowenv = myrunStack.top();
+		try {
+			nowenv.findRecord(strlist.at(pos), false);
+		}
+		catch (myexception ex) {
+			ex.lineno = pos;
+			ex.pntMsg();
+		}
 		pos++;
 		while (oriList.at(pos) == rawCOMMA) {
 			pos++;
@@ -860,6 +938,13 @@ int findScanfS(vector<treetype>& oriList, int begin) {
 			{
 				findit = false;
 				return begin;
+			}
+			try {
+				nowenv.findRecord(strlist.at(pos), false);
+			}
+			catch (myexception ex) {
+				ex.lineno = pos;
+				ex.pntMsg();
 			}
 			pos++;
 		}
@@ -935,18 +1020,17 @@ int findReturnS(vector<treetype>& oriList, int begin) {
 			pos = findExpress(oriList, pos + 1, tp);
 			if (!findit)
 				return begin; //如果没有表达式就没有括号
+
 			try {
 				runStack nowenv = myrunStack.top();
-				int funaddr = nowenv.dataStack.at(0).addr;
-				funcRecord* fatherfunc = (funcRecord*)funaddr;
-				if (fatherfunc->returnT != tp) {
-					if (fatherfunc->returnT == VOID) {
-						throw myexception('g', lnolist.at(pos - 1), "");
-					}
-					else {
-						throw myexception('h', lnolist.at(pos - 1), "");
-					}
+				funcRecord father = nowenv.father;
+				if (father.returnT == datatype::dVOID) {
+					throw myexception('g', lnolist.at(pos - 1), "VOID函数出现了非void返回语句");
 				}
+				else if (father.returnT != tp) {
+					throw myexception('h', lnolist.at(pos - 1), "return函数返回类型不匹配");
+				}
+				father.rtN++;
 			}
 			catch (myexception ex) {
 				ex.pntMsg();
@@ -955,20 +1039,18 @@ int findReturnS(vector<treetype>& oriList, int begin) {
 				findit = false;
 				return begin;
 			}
+			
 			cout<<"返回语句"<<endl;
 			findit = true;
 			return pos + 1;
 		}
 		else if (oriList.at(pos) == rawSEMICN) {
-			tp = VOID;
+			tp = dVOID;
 			try {
 				runStack nowenv = myrunStack.top();
-				int funaddr = nowenv.dataStack.at(0).addr;
-				funcRecord* fatherfunc = (funcRecord*)funaddr;
-				if (fatherfunc->returnT != tp) {
-					if (fatherfunc->returnT != VOID) {
-						throw myexception('h', lnolist.at(pos - 1), "non void func return null");
-					}
+				funcRecord father = nowenv.father;
+				if (father.returnT != datatype::dVOID) {
+					myexception('h', lnolist.at(pos), "返回值函数返回void");
 				}
 			}
 			catch (myexception ex) {
@@ -1095,57 +1177,27 @@ int findSentence(vector<treetype>& oriList, int begin) {
 		}
 		else if (oriList.at(begin) == rawIDENFR) {
 			int posbuf = pos;
-			pos = findUseReturnFunc(oriList, posbuf);
+			datatype rt;
+			pos = findUseFunc(oriList, posbuf, rt);
 			if (!findit) {
-				pos = findUseVoidFunc(oriList, posbuf);
-				if (!findit) {
-					pos = findAssignS(oriList, posbuf);
-					if (!findit)
-					{
-						findit = false;
-						return begin;//error happen
-					}
-					else {
-						if (oriList.at(pos) != rawSEMICN)
-						{
-							findit = false;
-							return begin;
-						}
-						pos++;
-						if (findit)
-						{
-							cout << "语句" << endl;
-						}
-						return pos ;
-					}
-				}
-				else {
-					if (oriList.at(pos) != rawSEMICN)
-					{
-						findit = false;
-						return begin;
-					}	
-					pos++;
-					if (findit)
-					{
-						cout << "语句" << endl;
-					}
-					return pos;
-				}
-			}
-			else {
-				if (oriList.at(pos) != rawSEMICN)
+				pos = findAssignS(oriList, posbuf);
+				if (!findit)
 				{
 					findit = false;
-					return begin;
+					return begin;//error happen
 				}
-				pos++;
-				if (findit)
-				{
-					cout << "语句" << endl;
-				}
-				return pos;
 			}
+			if (oriList.at(pos) != rawSEMICN)
+			{
+				findit = false;
+				return begin;
+			}
+			pos++;
+			if (findit)
+			{
+				cout << "语句" << endl;
+			}
+			return pos;
 
 		}
 		else
@@ -1164,19 +1216,39 @@ int findAssignS(vector<treetype>& oriList, int begin) {
 			findit = false;
 			return begin;
 		}
-		pos += 1;
-		if (oriList.at(pos) == rawLBRACK) {
-			pos++;
-			pos = findExpress(oriList, pos);
-			if (findit == false) {
-				return begin;
+		runStack nowenv = myrunStack.top();
+		record var;
+		try {
+			var = nowenv.findRecord(strlist.at(pos));
+			if (var.typeC == CONST) {
+				myexception  ex('j', lnolist.at(pos), "尝试为常量" + strlist.at(pos) + "赋值");
+				ex.pntMsg();
 			}
-			if (oriList.at(pos) != rawRBRACK)
-			{
-				findit = false;
-				return begin;
+
+			pos += 1;
+			if (oriList.at(pos) == rawLBRACK) {
+				pos++;
+				datatype tp;
+				pos = findExpress(oriList, pos, tp);
+				if (findit == false) {
+					return begin;
+				}
+				if (tp != datatype::dINT) {
+					myexception ex('i', lnolist.at(pos - 1), "赋值语句中数组下标不是整数");
+					ex.pntMsg();
+				}
+				if (oriList.at(pos) != rawRBRACK)
+				{
+					findit = false;
+					return begin;
+				}
+				pos++;
 			}
-			pos++;
+		}
+		catch (myexception ex) {
+			ex.lineno = pos;
+			ex.msg = "未定义的变量名";
+			ex.pntMsg();
 		}
 		if (oriList.at(pos) != rawASSIGN)
 		{
@@ -1184,7 +1256,8 @@ int findAssignS(vector<treetype>& oriList, int begin) {
 			return begin;
 		}
 		pos++;
-		pos = findExpress(oriList, pos);
+		datatype tp2;
+		pos = findExpress(oriList, pos, tp2);
 		if (findit == false) {
 			return begin;
 		}
@@ -1219,31 +1292,42 @@ int findValueParaList(vector<treetype>& oriList, int begin, vector<datatype>& pa
 	}
 }
 
-int findUseVoidFunc(vector<treetype>& oriList, int begin, datatype& tp) {
+int findUseFunc(vector<treetype>& oriList, int begin, datatype& tp) {
 	try {
+		tp = datatype::dINT;
 		int pos = begin;
 		if (oriList.at(pos) != rawIDENFR || oriList.at(pos + 1) != rawLPARENT)
 		{
 			findit = false;
 			return begin;
 		}
-		string name = strlist.at(pos); 
+		string name = strlist.at(pos);
 		pos += 2;
 		vector<datatype> paraL;
 		pos = findValueParaList(oriList, pos, paraL);
 		if (findit == false) {
 			return begin;
 		}
-		funcRecord fun = find_func(name, paraL);
-		if (fun.returnT != VOID)
-			return begin;
-		tp = fun.returnT;
+		try {
+			funcRecord fun = find_func(name, paraL);
+			tp = fun.returnT;
+		}
+		catch (myexception ex) {
+			ex.lineno = lnolist.at(pos - 1);
+			ex.msg = "没有这样的函数";
+			ex.pntMsg();
+		}
 		if (oriList.at(pos) != rawRPARENT)
 		{
 			findit = false;
 			return begin;
 		}
-		cout << "使用不带返回值的函数" << endl;
+		if (tp == datatype::dVOID) {
+			cout << "使用不带返回值的函数" << endl;
+		}
+		else {
+			cout << "使用返回值的函数" << endl;
+		}
 		findit = true;
 		return pos + 1;
 	}
@@ -1252,41 +1336,6 @@ int findUseVoidFunc(vector<treetype>& oriList, int begin, datatype& tp) {
 	}
 }
 
-int findUseReturnFunc(vector<treetype>& oriList, int begin, datatype& tp) {
-	try {
-		int pos = begin;
-		if (oriList.at(pos) != rawIDENFR || oriList.at(pos + 1) != rawLPARENT)
-		{
-			findit = false;
-			return begin;
-		}
-		string name = strlist.at(pos); 
-		funcRecord func;
-		vector<datatype> paral;
-		pos += 2;
-		pos = findValueParaList(oriList, pos, paral);
-		if (findit == false) {
-			return begin;
-		}
-		func = find_func(name, paral); // 没有找到会跳出去
-		
-		if (func.returnT == VOID)
-			return begin;
-		tp = func.returnT;
-		if (oriList.at(pos) != rawRPARENT)
-		{
-			findit = false;
-			return begin;
-		}
-		cout << "使用带返回值的函数" << endl;
-		findit = true;
-		return pos + 1;
-	}
-	catch (out_of_range& exc) {
-		return begin;
-
-	}
-}
 
 int findFuncVoidDef(vector<treetype>& oriList, int begin) {
 	try {
@@ -1297,23 +1346,27 @@ int findFuncVoidDef(vector<treetype>& oriList, int begin) {
 			return begin;
 		}
 		runStack preenv = myrunStack.top();
-		funcRecord newF = funcRecord(strlist.at(begin+1), VOID);
+		funcRecord newF = funcRecord(strlist.at(begin+1), dVOID);
 		int pos = begin + 3;
-		pos = findParamList(oriList, pos, newF);
-		try {
-			put_check(newF);
-		}
-		catch (myexception ex) {
-			myexception finalex = myexception(ex.etype, lnolist.at(pos - 1), "");
-			finalex.pntMsg();
-		}
-		runStack newenv();
+		runStack newenv(&preenv);
+		newenv.father = newF;
+		pos = findParamList(oriList, pos, newF, newenv);
 		if (findit == false || oriList.at(pos) != rawRPARENT || oriList.at(pos + 1) != rawLBRACE) {
 			findit = false;
 			return begin;
 		}
+		try {
+			put_check(newF);
+		}
+		catch (myexception ex) {
+			ex.lineno = lnolist.at(pos - 1);
+			ex.msg = "void 函数存在重名同参函数";
+			ex.pntMsg();
+		}
+		myrunStack.push(newenv);
 		pos += 2;
 		pos = findComplexSentence(oriList, pos);
+		myrunStack.pop();
 		if (findit == false || oriList.at(pos) != rawRBRACE) {
 			findit = false;
 			return begin;
@@ -1354,8 +1407,22 @@ int findMainFunc(vector<treetype>& oriList, int begin) {
 			findit = false;
 			return begin;
 		}
+		vector<datatype> paraLnull;
+		funcRecord newF("main", datatype::dVOID,paraLnull); //要不要把MAIN也放进函数列表呢？？？先不放
+		runStack preenv = myrunStack.top();
+		runStack mainenv(&preenv);
+		mainenv.father = newF;
+		myrunStack.push(mainenv);
+		try {
+			put_check(newF);
+		}
+		catch (myexception ex) {
+			ex.lineno = lnolist.at(begin + 1);
+			ex.pntMsg();
+		}
 		int pos = begin + 5;
 		pos = findComplexSentence(oriList, pos);
+		myrunStack.pop();
 		if (findit == false) {
 			return begin;
 		}

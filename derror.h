@@ -12,11 +12,13 @@ public:
 	string msg;
 
 	myexception() {
-
+		this->etype = 'p';
+		this->lineno = -1;
 	}
 
 	myexception(char etype) {
 		this->etype = etype;
+		this->lineno = -1;
 	}
 
 	myexception(char etype, string msg) {
@@ -31,6 +33,6 @@ public:
 	}
 
 	void pntMsg() {
-		std::cerr << to_string(lineno) << " " << etype;
+		std::cerr << to_string(lineno) << " " << etype<<"\n";
 	}
 };

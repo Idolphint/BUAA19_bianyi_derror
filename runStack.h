@@ -1,22 +1,13 @@
 #pragma once
 #include <vector>
 #include <iostream>
+#include "funcStack.h"
 #include "derror.h"
 #include <stack>
 using namespace std;
 
 using namespace std;
-static enum classtype {//定义类别
-	CONST,
-	VAR
-};
 
-static enum datatype {//数据类型
-	INT,
-	CHAR,
-	ARRAY,
-	VOID
-};
 
 class arrayTem {
 public:
@@ -51,12 +42,12 @@ public:
 class runStack {
 public:
 	vector<runStack*> display;//display区存储它上级的指针
+	funcRecord father;
 	int ptr;
 	//省略基地址指针,我选择用*/&替代
 	//返回地址省略
 	runStack* preabp;//上一个活动基
 	vector<record> dataStack;
-	funcRecord father;
 
 	runStack() {
 		this->preabp = NULL;
@@ -83,6 +74,7 @@ public:
 			if (tmp.name == name) {
 				return tmp;
 			}
+			ptrtmp--;
 		}
 		if (!write) {
 			for (runStack *bufS : display) {
@@ -103,7 +95,8 @@ public:
 			record before = findRecord(rec.name, true);
 		}
 		catch (myexception ex) { // 正确的情况okk
-			dataStack.push_back(rec);
+			this->dataStack.push_back(rec);
+			this->ptr++;
 			return;
 		}
 		throw myexception('b');//没有异常说明，名字重定义
