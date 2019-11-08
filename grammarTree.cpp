@@ -156,7 +156,14 @@ int findConstDef(vector<treetype>& oriList, int begin) {
 			runStack nowenv = myrunStack.top();
 			myrunStack.pop();
 			record newone(strlist.at(pos), CONST, tp);
-			nowenv.writeStack(newone);
+			try {
+				nowenv.writeStack(newone);
+			}
+			catch (myexception ex) {
+				ex.lineno = lnolist.at(begin + 1);
+				ex.msg = "变量名重定义";
+				ex.pntMsg();
+			}
 			pos += 2;
 			int posbuf = findInt(oriList, pos);
 			if (!findit) {
@@ -177,7 +184,14 @@ int findConstDef(vector<treetype>& oriList, int begin) {
 					return begin;
 				}
 				record newone(strlist.at(pos), CONST, tp);
-				nowenv.writeStack(newone);
+				try {
+					nowenv.writeStack(newone);
+				}
+				catch (myexception ex) {
+					ex.lineno = lnolist.at(begin + 1);
+					ex.msg = "变量名重定义";
+					ex.pntMsg();
+				}
 				pos += 2;
 				posbuf = findInt(oriList, pos);
 				if (!findit) {
@@ -206,15 +220,25 @@ int findConstDef(vector<treetype>& oriList, int begin) {
 			}
 			runStack nowenv = myrunStack.top();
 			myrunStack.pop();
-			record newone(strlist.at(pos), CONST, tp);
-			nowenv.writeStack(newone);
+			string name = strlist.at(pos);
+			record newone(name, CONST, tp);
+			try {
+				nowenv.writeStack(newone);
+			}
+			catch (myexception ex) {
+				ex.lineno = lnolist.at(begin + 1);
+				ex.msg = "变量名重定义";
+				ex.pntMsg();
+			}
 			pos = pos + 2;
 			if (oriList.at(pos) != rawCHARCON) {
 				myexception ex('o', lnolist.at(pos), "此处必须是字符常量");
 				ex.pntMsg();
 				while (oriList.at(pos) != rawCOMMA && oriList.at(pos) != rawSEMICN &&
 					lnolist.at(pos) == lnolist.at(pos - 1)) pos++;
+				pos--;
 			}
+			pos++;
 			while (oriList.at(pos) == rawCOMMA) {
 				pos++;
 				if (oriList.at(pos) != rawIDENFR || oriList.at(pos + 1) != rawASSIGN)
@@ -223,16 +247,25 @@ int findConstDef(vector<treetype>& oriList, int begin) {
 					findit = false;
 					return begin;
 				}
+				name = strlist.at(pos);
 				pos = pos + 2;
 				if (oriList.at(pos) != rawCHARCON) {
 					myexception ex('o', lnolist.at(pos), "此处必须是字符常量");
 					ex.pntMsg();
 					while (oriList.at(pos) != rawCOMMA && oriList.at(pos) != rawSEMICN &&
 						lnolist.at(pos) == lnolist.at(pos - 1)) pos++;
+					pos--;
 				}
-				record newone(strlist.at(pos), CONST, tp);
-				nowenv.writeStack(newone);
-				pos += 3;
+				pos++;
+				record newone(name, CONST, tp);
+				try {
+					nowenv.writeStack(newone);
+				}
+				catch (myexception ex) {
+					ex.lineno = lnolist.at(begin + 1);
+					ex.msg = "变量名重定义";
+					ex.pntMsg();
+				}
 			}
 			myrunStack.push(nowenv);
 			pos--;//这里pos停留在最后匹配到整数上
@@ -330,12 +363,26 @@ int findVarDef(vector<treetype>& oriList, int begin) {
 			arrayTem temp(len, 1, tp, globalAddr);
 			record newone(name, VAR, dARRAY);
 			newone.addr = temp;
-			nowenv.writeStack(newone);
+			try {
+				nowenv.writeStack(newone);
+			}
+			catch (myexception ex) {
+				ex.lineno = lnolist.at(begin + 1);
+				ex.msg = "变量名重定义";
+				ex.pntMsg();
+			}
 			pos++;
 		}
 		else {
 			record newone(name, VAR, tp);
-			nowenv.writeStack(newone);
+			try {
+				nowenv.writeStack(newone);
+			}
+			catch (myexception ex) {
+				ex.lineno = lnolist.at(begin + 1);
+				ex.msg = "变量名重定义";
+				ex.pntMsg();
+			}
 		}
 		while (oriList.at(pos) == rawCOMMA) {
 			pos++;
@@ -373,12 +420,26 @@ int findVarDef(vector<treetype>& oriList, int begin) {
 				arrayTem temp(len, 1, tp, globalAddr);
 				record newone(name, VAR, dARRAY);
 				newone.addr = temp;
-				nowenv.writeStack(newone);
+				try {
+					nowenv.writeStack(newone);
+				}
+				catch (myexception ex) {
+					ex.lineno = lnolist.at(begin + 1);
+					ex.msg = "变量名重定义";
+					ex.pntMsg();
+				}
 				pos++;
 			}
 			else {
 				record newone(name, VAR, tp);
-				nowenv.writeStack(newone);
+				try {
+					nowenv.writeStack(newone);
+				}
+				catch (myexception ex) {
+					ex.lineno = lnolist.at(begin + 1);
+					ex.msg = "变量名重定义";
+					ex.pntMsg();
+				}
 			}
 		}
 		myrunStack.push(nowenv);
@@ -1135,7 +1196,7 @@ int findReturnS(vector<treetype>& oriList, int begin) {
 			}
 			std::cout << "返回语句 " << endl;
 			findit = true;
-			return pos+1;
+			return pos;
 		}
 	}
 	catch (out_of_range& exc) {
@@ -1307,7 +1368,7 @@ int findAssignS(vector<treetype>& oriList, int begin) {
 			}
 		}
 		catch (myexception ex) {
-			ex.lineno = pos;
+			ex.lineno = lnolist.at(pos);
 			ex.msg = "未定义的变量名";
 			ex.pntMsg();
 		}
@@ -1355,7 +1416,10 @@ int findValueParaList(vector<treetype>& oriList, int begin, vector<datatype>& pa
 	try {
 		datatype buft;
 		int pos = findExpress(oriList, begin, buft);
-		if (!findit) return pos;
+		if (!findit) {
+			findit = true;
+			return begin;
+		}
 		paraL.push_back(buft);
 		//无论是否找到experss都是对的
 		while (oriList.at(pos) == rawCOMMA) {

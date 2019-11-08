@@ -23,7 +23,7 @@ void wordAna::initWordList() {
 			lineno++;
 			continue;
 		}
-		if (isalpha(c) || c == '_') {
+		else if (isalpha(c) || c == '_') {
 			mytype = IDENFR;
 			buf += c;
 			infile.get(c);
@@ -39,8 +39,7 @@ void wordAna::initWordList() {
 			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
-
-		if (isdigit(c)) {
+		else if (isdigit(c)) {
 			mytype = INTCON;
 			buf += c;
 			infile.get(c);
@@ -55,8 +54,7 @@ void wordAna::initWordList() {
 			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
-
-		if (c == '\'') {
+		else if (c == '\'') {
 			mytype = CHARCON;
 			infile.get(c);
 			buf += c;
@@ -89,11 +87,14 @@ void wordAna::initWordList() {
 			infile.get(c);
 			continue;
 		}
-
-		if (c == '\"') {
+		else if (c == '\"') {
 			mytype = STRCON;
 			infile.get(c);
 			while (c != '\"') {
+				if (c < 32 || c>126 || c == 34) {
+					myexception ex('a', lineno, "字符串内部有不合法字符");
+					ex.pntMsg();
+				}
 				buf += c;
 				infile.get(c);
 			}
@@ -103,8 +104,7 @@ void wordAna::initWordList() {
 			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
-
-		if (c == '+') {
+		else if (c == '+') {
 			mytype = PLUS;
 			buf += c;
 			wordList.push_back(mytype);
@@ -113,8 +113,7 @@ void wordAna::initWordList() {
 			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
-
-		if (c == '-') {
+		else if (c == '-') {
 			mytype = MINU;
 			buf += c;
 			wordList.push_back(mytype);
@@ -123,8 +122,7 @@ void wordAna::initWordList() {
 			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
-
-		if (c == '*') {
+		else if (c == '*') {
 			mytype = MULT;
 			buf += c;
 			wordList.push_back(mytype);
@@ -133,8 +131,7 @@ void wordAna::initWordList() {
 			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
-
-		if (c == '/') {
+		else if (c == '/') {
 			mytype = DIV;
 			buf += c;
 			wordList.push_back(mytype);
@@ -143,8 +140,7 @@ void wordAna::initWordList() {
 			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
-
-		if (c == ';') {
+		else if (c == ';') {
 			mytype = SEMICN;
 			buf += c;
 			wordList.push_back(mytype);
@@ -153,8 +149,7 @@ void wordAna::initWordList() {
 			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
-
-		if (c == ',') {
+		else if (c == ',') {
 			mytype = COMMA;
 			buf += c;
 			wordList.push_back(mytype);
@@ -163,8 +158,7 @@ void wordAna::initWordList() {
 			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
-
-		if (c == '(') {
+		else if (c == '(') {
 			mytype = LPARENT;
 			buf += c;
 			wordList.push_back(mytype);
@@ -173,8 +167,7 @@ void wordAna::initWordList() {
 			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
-
-		if (c == ')') {
+		else if (c == ')') {
 			mytype = RPARENT;
 			buf += c;
 			wordList.push_back(mytype);
@@ -183,8 +176,7 @@ void wordAna::initWordList() {
 			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
-
-		if (c == '[') {
+		else if (c == '[') {
 			mytype = LBRACK;
 			buf += c;
 			wordList.push_back(mytype);
@@ -193,8 +185,7 @@ void wordAna::initWordList() {
 			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
-
-		if (c == ']') {
+		else if (c == ']') {
 			mytype = RBRACK;
 			buf += c;
 			wordList.push_back(mytype);
@@ -203,8 +194,7 @@ void wordAna::initWordList() {
 			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
-
-		if (c == '{') {
+		else if (c == '{') {
 			mytype = LBRACE;
 			buf += c;
 			wordList.push_back(mytype);
@@ -213,7 +203,7 @@ void wordAna::initWordList() {
 			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
-		if (c == '}') {
+		else if (c == '}') {
 			mytype = RBRACE;
 			buf += c;
 			wordList.push_back(mytype);
@@ -222,8 +212,7 @@ void wordAna::initWordList() {
 			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
-
-		if (c == '<') {
+		else if (c == '<') {
 			buf += c;
 			infile.get(c);
 			if (c == '=') {
@@ -245,7 +234,7 @@ void wordAna::initWordList() {
 				continue;
 			}
 		}
-		if (c == '>') {
+		else if (c == '>') {
 			buf += c;
 			infile.get(c);
 			if (c == '=') {
@@ -267,8 +256,7 @@ void wordAna::initWordList() {
 				continue;
 			}
 		}
-
-		if (c == '=') {
+		else if (c == '=') {
 			buf += c;
 			infile.get(c);
 			if (c == '=') {
@@ -290,8 +278,7 @@ void wordAna::initWordList() {
 				continue;
 			}
 		}
-
-		if (c == '!') {
+		else if (c == '!') {
 			buf += c;
 			infile.get(c);
 			if (c == '=') {
@@ -304,6 +291,11 @@ void wordAna::initWordList() {
 				continue;
 			}
 		}
+		else if (!isspace(c)){
+			myexception ex('a', lineno, "非法符号");
+			ex.pntMsg();
+		}
+
 	}
 
 	infile.close();
