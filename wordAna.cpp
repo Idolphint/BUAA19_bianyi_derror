@@ -36,7 +36,7 @@ void wordAna::initWordList() {
 			wordList.push_back(mytype);
 			strlist.push_back(buf);
 			lnolist.push_back(lineno);
-			//cout << type1string[mytype] << " " << buf << endl;
+			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
 
@@ -52,7 +52,7 @@ void wordAna::initWordList() {
 			wordList.push_back(mytype);
 			strlist.push_back(buf);
 			lnolist.push_back(lineno);
-			//cout << type1string[mytype] << " " << buf << endl;
+			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
 
@@ -60,6 +60,14 @@ void wordAna::initWordList() {
 			mytype = CHARCON;
 			infile.get(c);
 			buf += c;
+			try {
+				if (c != '+' && c != '-' && c != '*' && c != '/' && c != '_' && (!isalnum(c))) {
+					throw myexception ('a', lineno, "字符只能是+-*/字母数字");
+				}
+			}
+			catch (myexception ex) {
+				ex.pntMsg();
+			}
 			infile.get(c);
 			try {
 				if (c != '\'') {
@@ -67,7 +75,7 @@ void wordAna::initWordList() {
 						infile.get(c);
 						buf += c;
 					}
-					throw myexception('a', lineno, "");
+					throw myexception('a', lineno, "字符中只能有一个字符");
 				}
 			}
 			catch (myexception ex) {
@@ -77,7 +85,7 @@ void wordAna::initWordList() {
 			wordList.push_back(mytype);
 			strlist.push_back(buf);
 			lnolist.push_back(lineno);
-			//cout << type1string[mytype] << " " << buf << endl;
+			//std::cout << type1string[mytype] << " " << buf << endl;
 			infile.get(c);
 			continue;
 		}
@@ -92,7 +100,7 @@ void wordAna::initWordList() {
 			wordList.push_back(mytype);
 			strlist.push_back(buf);
 			lnolist.push_back(lineno);
-			//cout << type1string[mytype] << " " << buf << endl;
+			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
 
@@ -102,7 +110,7 @@ void wordAna::initWordList() {
 			wordList.push_back(mytype);
 			strlist.push_back(buf);
 			lnolist.push_back(lineno);
-			//cout << type1string[mytype] << " " << buf << endl;
+			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
 
@@ -112,7 +120,7 @@ void wordAna::initWordList() {
 			wordList.push_back(mytype);
 			strlist.push_back(buf);
 			lnolist.push_back(lineno);
-			//cout << type1string[mytype] << " " << buf << endl;
+			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
 
@@ -122,7 +130,7 @@ void wordAna::initWordList() {
 			wordList.push_back(mytype);
 			strlist.push_back(buf);
 			lnolist.push_back(lineno);
-			//cout << type1string[mytype] << " " << buf << endl;
+			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
 
@@ -132,7 +140,7 @@ void wordAna::initWordList() {
 			wordList.push_back(mytype);
 			strlist.push_back(buf);
 			lnolist.push_back(lineno);
-			//cout << type1string[mytype] << " " << buf << endl;
+			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
 
@@ -142,7 +150,7 @@ void wordAna::initWordList() {
 			wordList.push_back(mytype);
 			strlist.push_back(buf);
 			lnolist.push_back(lineno);
-			//cout << type1string[mytype] << " " << buf << endl;
+			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
 
@@ -152,7 +160,7 @@ void wordAna::initWordList() {
 			wordList.push_back(mytype);
 			strlist.push_back(buf);
 			lnolist.push_back(lineno);
-			//cout << type1string[mytype] << " " << buf << endl;
+			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
 
@@ -162,7 +170,7 @@ void wordAna::initWordList() {
 			wordList.push_back(mytype);
 			strlist.push_back(buf);
 			lnolist.push_back(lineno);
-			//cout << type1string[mytype] << " " << buf << endl;
+			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
 
@@ -172,7 +180,7 @@ void wordAna::initWordList() {
 			wordList.push_back(mytype);
 			strlist.push_back(buf);
 			lnolist.push_back(lineno);
-			//cout << type1string[mytype] << " " << buf << endl;
+			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
 
@@ -182,7 +190,7 @@ void wordAna::initWordList() {
 			wordList.push_back(mytype);
 			strlist.push_back(buf);
 			lnolist.push_back(lineno);
-			//cout << type1string[mytype] << " " << buf << endl;
+			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
 
@@ -192,7 +200,7 @@ void wordAna::initWordList() {
 			wordList.push_back(mytype);
 			strlist.push_back(buf);
 			lnolist.push_back(lineno);
-			//cout << type1string[mytype] << " " << buf << endl;
+			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
 
@@ -202,7 +210,7 @@ void wordAna::initWordList() {
 			wordList.push_back(mytype);
 			strlist.push_back(buf);
 			lnolist.push_back(lineno);
-			//cout << type1string[mytype] << " " << buf << endl;
+			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
 		if (c == '}') {
@@ -211,7 +219,7 @@ void wordAna::initWordList() {
 			wordList.push_back(mytype);
 			strlist.push_back(buf);
 			lnolist.push_back(lineno);
-			//cout << type1string[mytype] << " " << buf << endl;
+			//std::cout << type1string[mytype] << " " << buf << endl;
 			continue;
 		}
 
@@ -224,7 +232,7 @@ void wordAna::initWordList() {
 				wordList.push_back(mytype);
 				strlist.push_back(buf);
 				lnolist.push_back(lineno);
-				//cout << type1string[mytype] << " " << buf << endl;
+				//std::cout << type1string[mytype] << " " << buf << endl;
 				continue;
 			}
 			else {
@@ -233,7 +241,7 @@ void wordAna::initWordList() {
 				wordList.push_back(mytype);
 				strlist.push_back(buf);
 				lnolist.push_back(lineno);
-				//cout << type1string[mytype] << " " << buf << endl;
+				//std::cout << type1string[mytype] << " " << buf << endl;
 				continue;
 			}
 		}
@@ -246,7 +254,7 @@ void wordAna::initWordList() {
 				wordList.push_back(mytype);
 				strlist.push_back(buf);
 				lnolist.push_back(lineno);
-				//cout << type1string[mytype] << " " << buf << endl;
+				//std::cout << type1string[mytype] << " " << buf << endl;
 				continue;
 			}
 			else {
@@ -255,7 +263,7 @@ void wordAna::initWordList() {
 				wordList.push_back(mytype);
 				strlist.push_back(buf);
 				lnolist.push_back(lineno);
-				//cout << type1string[mytype] << " " << buf << endl;
+				//std::cout << type1string[mytype] << " " << buf << endl;
 				continue;
 			}
 		}
@@ -269,7 +277,7 @@ void wordAna::initWordList() {
 				wordList.push_back(mytype);
 				strlist.push_back(buf);
 				lnolist.push_back(lineno);
-				//cout << type1string[mytype] << " " << buf << endl;
+				//std::cout << type1string[mytype] << " " << buf << endl;
 				continue;
 			}
 			else {
@@ -278,7 +286,7 @@ void wordAna::initWordList() {
 				wordList.push_back(mytype);
 				strlist.push_back(buf);
 				lnolist.push_back(lineno);
-				//cout << type1string[mytype] << " " << buf << endl;
+				//std::cout << type1string[mytype] << " " << buf << endl;
 				continue;
 			}
 		}
@@ -292,7 +300,7 @@ void wordAna::initWordList() {
 				wordList.push_back(mytype);
 				strlist.push_back(buf);
 				lnolist.push_back(lineno);
-				//cout << type1string[mytype] << " " << buf << endl;
+				//std::cout << type1string[mytype] << " " << buf << endl;
 				continue;
 			}
 		}

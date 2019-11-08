@@ -14,8 +14,13 @@ public:
 	int dimn;//本文法只支持一维数组
 	int len;
 	datatype tp;
-	int addr;
-	arrayTem(int len, int dim, datatype tp, int addr) : len(len), dimn(dim), tp(tp), addr(addr) {
+	void* addr;
+	arrayTem() {
+		tp = dINT;
+		len = 1;
+		dimn = 1;
+	}
+	arrayTem(int len, int dim, datatype tp, void* addr) : len(len), dimn(dim), tp(tp), addr(addr) {
 
 	}
 };
@@ -25,16 +30,15 @@ public:
 	string name;
 	classtype typeC;
 	datatype typeD;
-	int addr;// 存储地址，也可以指向模板地址
+	arrayTem addr;// 存储地址，也可以指向模板地址
 
 	record() {
-		addr = -1;
+		
 	}
-	record(string name, classtype c, datatype d, int addr) {
+	record(string name, classtype c, datatype d) {
 		this->name = name;
 		this->typeC = c;
 		this->typeD = d;
-		this->addr = addr;
 	}
 
 };
@@ -42,7 +46,7 @@ public:
 class runStack {
 public:
 	vector<runStack*> display;//display区存储它上级的指针
-	funcRecord father;
+	funcRecord* father;
 	int ptr;
 	//省略基地址指针,我选择用*/&替代
 	//返回地址省略
@@ -84,6 +88,7 @@ public:
 					if (tmp.name == name) {
 						return tmp;
 					}
+					ptrtmp2--;
 				}
 			}
 		}
