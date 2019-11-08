@@ -935,7 +935,7 @@ int findDoS(vector<treetype>& oriList, int begin) {
 		if (oriList.at(pos) != rawWHILETK) {
 			myexception ex('n', lnolist.at(pos), "do-while»±…Ÿwhile");////////////////////////////????how to jump??
 			ex.pntMsg();
-			return pos;
+			pos--;
 		}
 		if (oriList.at(pos + 1) != rawLPARENT)
 		{
