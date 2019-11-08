@@ -33,6 +33,6 @@ public:
 	}
 
 	void pntMsg() {
-		std::cerr << to_string(lineno) << " " << etype<<"\n";
+		std::cerr << to_string(lineno) <<"  "<< msg << etype<<"\n";
 	}
 };
